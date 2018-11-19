@@ -187,7 +187,7 @@ public class DiadocApi {
         List<NameValuePair> parameters = new ArrayList<NameValuePair>();
         parameters.add(new BasicNameValuePair("login", login));
         parameters.add(new BasicNameValuePair("password", password));
-        byte[] httpResponse = PerformPostHttpRequest("/Authenticate", parameters, null);
+        byte[] httpResponse = PerformPostHttpRequest("/V2/Authenticate", parameters, null);
         String result;
         try {
             result = new String(httpResponse, "UTF8");
@@ -199,8 +199,16 @@ public class DiadocApi {
 
     public void Authenticate(X509Certificate currentCert) throws Exception {
         updateCredentials(null);
-        byte[] responseBody = PerformPostHttpRequest("/Authenticate", null, currentCert.getEncoded());
-        String authToken = getAuthToken(responseBody, currentCert);
+
+        byte[] encryptedToken = PerformPostHttpRequest("/V2/Authenticate", null, currentCert.getEncoded());
+        String decryptedToken = getDecryptedToken(encryptedToken, currentCert);
+
+        List<NameValuePair> parameters = new ArrayList<NameValuePair>();
+        parameters.add(new BasicNameValuePair("token", decryptedToken));
+        byte[] authTokenBytes = PerformPostHttpRequest("/V2/AuthenticateConfirm", parameters, null);
+
+        String authToken = StringUtils.newStringUtf8(authTokenBytes);
+
         updateCredentials(authToken);
     }
 
@@ -304,7 +312,7 @@ public class DiadocApi {
         PerformPostHttpRequest("/Delete", params, new byte[]{});
     }
 
-    private String getAuthToken(byte[] encryptedToken, X509Certificate currentCert) throws Exception {
+    private String getDecryptedToken(byte[] encryptedToken, X509Certificate currentCert) throws Exception {
         byte[] decryptedToken = decryptToken(encryptedToken, currentCert);
         return StringUtils.newStringUtf8(Base64.encodeBase64(decryptedToken));
     }
