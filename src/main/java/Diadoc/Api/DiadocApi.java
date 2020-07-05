@@ -1798,6 +1798,15 @@ public class DiadocApi {
         byte[] responseBytes = PerformPostHttpRequest("/UpdateEmployee", params, body);
         return EmployeeProtos.Employee.parseFrom(responseBytes);
     }
+	
+    public void DeleteEmployee(String boxId, String userId) throws IOException {
+        if (boxId == null) throw new NullPointerException("boxId");
+        if (userId == null) throw new NullPointerException("userId");
+        List<NameValuePair> params = new ArrayList<NameValuePair>();
+        params.add(new BasicNameValuePair("boxId", boxId));
+        params.add(new BasicNameValuePair("userId", userId));
+        PerformPostHttpRequest("/DeleteEmployee", params, null);
+    }
 
     public void DeleteEmployee(String boxId, String userId) throws IOException {
         if (boxId == null) throw new NullPointerException("boxId");
